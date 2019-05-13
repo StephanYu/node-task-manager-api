@@ -19,11 +19,30 @@ router.post('/tasks', auth, async (req, res) => {
 
 router.get('/tasks', auth, async (req, res) => {
 	try {
-		const tasks = await Task.find({ owner: req.user._id })
-		// Alternative way to find all tasks of specific user
-		// const tasks = await req.user.populate('tasks').execPopulate()
+		let match, sort = {}
 
-		res.send(tasks)
+		// GET /tasks?completed=true
+		if (req.query.completed === 'true' || req.query.completed === 'false') {
+			match.completed = req.query.completed === 'true'
+		}
+
+		// GET /tasks?sortBy=createdAt:desc
+		if (req.query.sortBy) {
+			let [key, value] = req.query.sortBy.split(':')
+			sort[key] = value === 'desc' ? -1 : 1
+		}
+
+		await req.user.populate({
+			path: 'tasks',
+			match,
+			options: {
+				limit: parseInt(req.query.limit),
+				skip: parseInt(req.query.skip),
+				sort
+			}
+		}).execPopulate()
+
+		res.send(req.user.tasks)
 	} catch (error) {
 		res.status(500).send(error)
 	}
