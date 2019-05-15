@@ -81,7 +81,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
 // Generate JWT Auth token for authenticating users
 userSchema.methods.generateAuthToken = async function() {
 	const user = this
-	const secret = 'my_secure_secret'
+	const secret = process.env.JWT_SECRET
 	const token = jwt.sign({ _id: user._id.toString() }, secret)
 
 	user.tokens = user.tokens.concat({ token })
@@ -98,6 +98,7 @@ userSchema.methods.toJSON = function () {
 
 	delete userObj.password
 	delete userObj.tokens
+	delete userObj.avatar
 
 	return userObj
 }
